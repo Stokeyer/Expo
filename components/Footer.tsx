@@ -1,5 +1,6 @@
 import { View, Text, Pressable } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type FooterProps = {
   activeScreen: string;
@@ -9,6 +10,8 @@ type FooterProps = {
 };
 
 export function Footer({ activeScreen, onNavigate, isBasketOpen, cartItemsCount = 0 }: FooterProps) {
+  const insets = useSafeAreaInsets();
+  
   const isActive = (screen: string) => {
     if (screen === 'basket') return isBasketOpen;
     return activeScreen === screen;
@@ -16,7 +19,10 @@ export function Footer({ activeScreen, onNavigate, isBasketOpen, cartItemsCount 
 
   return (
     <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-neutral-200">
-      <View className="flex-row items-center justify-around py-3 px-4">
+      <View 
+        className="flex-row items-center justify-around py-3 px-4"
+        style={{ paddingBottom: Math.max(12, insets.bottom) }}
+      >
         <Pressable onPress={() => onNavigate('main')} className="items-center gap-1">
           <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={isActive('main') ? '#dc2626' : '#737373'} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <Path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />

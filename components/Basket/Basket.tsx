@@ -1,6 +1,7 @@
 import { View, Text, Pressable, Animated, Dimensions, PanResponder, Image, ScrollView } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 import Svg, { Path } from 'react-native-svg';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function AnimatedButton({ 
   onPress, 
@@ -134,6 +135,7 @@ export function Basket({ onClose, cartItems, setCartItems }: BasketProps) {
   const slideAnim = useRef(new Animated.Value(Dimensions.get('window').height)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const panY = useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     Animated.parallel([
@@ -259,7 +261,10 @@ export function Basket({ onClose, cartItems, setCartItems }: BasketProps) {
                 ))}
               </ScrollView>
               
-              <View className="px-6 py-4 bg-white border-t border-neutral-200">
+              <View 
+                className="px-6 py-4 bg-white border-t border-neutral-200"
+                style={{ paddingBottom: Math.max(16, insets.bottom) }}
+              >
                 <View className="flex-row items-center justify-between mb-4">
                   <Text className="text-base text-neutral-500">Итого</Text>
                   <Text className="text-2xl font-bold text-red-500">
