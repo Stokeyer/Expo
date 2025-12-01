@@ -9,6 +9,9 @@
     "experiments": {
       "tsconfigPaths": true
     },
+    "cli": {
+      "appVersionSource": "app.json"
+    },
     "plugins": [],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -23,7 +26,10 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.rollshouse.pizza"
+      "bundleIdentifier": "com.rollshouse.pizza",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
