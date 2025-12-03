@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ScrollView, Animated, Alert } from 'react-native';
+import { View, Text, Pressable, ScrollView, Animated, Modal, Dimensions } from 'react-native';
 import { useRef, useState, useEffect } from 'react';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -111,6 +111,7 @@ export function Profile({ userName, userEmail, onLogout, openAddressForm, onAddr
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const [activeSetting, setActiveSetting] = useState<string | null>(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Автоматически открываем форму адреса, если требуется
   useEffect(() => {
@@ -148,14 +149,12 @@ export function Profile({ userName, userEmail, onLogout, openAddressForm, onAddr
   }
 
   const handleLogout = () => {
-    Alert.alert(
-      'Выйти из аккаунта',
-      'Вы уверены, что хотите выйти?',
-      [
-        { text: 'Отмена', style: 'cancel' },
-        { text: 'Выйти', style: 'destructive', onPress: onLogout },
-      ]
-    );
+    setShowLogoutModal(true);
+  };
+
+  const handleConfirmLogout = () => {
+    setShowLogoutModal(false);
+    onLogout();
   };
 
   return (
@@ -224,7 +223,201 @@ export function Profile({ userName, userEmail, onLogout, openAddressForm, onAddr
           </AnimatedPressable>
         </View>
       </ScrollView>
+
+      {/* Модальное окно подтверждения выхода */}
+      <LogoutConfirmationModal
+        visible={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleConfirmLogout}
+      />
     </View>
+  );
+}
+
+// Компонент модального окна подтверждения выхода
+function LogoutConfirmationModal({
+  visible,
+  onClose,
+  onConfirm,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const buttonScaleAnim = useRef(new Animated.Value(1)).current;
+  const cancelButtonScaleAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 0.9,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [visible]);
+
+  const handleConfirmPressIn = () => {
+    Animated.spring(buttonScaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+      tension: 300,
+      friction: 10,
+    }).start();
+  };
+
+  const handleConfirmPressOut = () => {
+    Animated.spring(buttonScaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 300,
+      friction: 10,
+    }).start();
+  };
+
+  const handleCancelPressIn = () => {
+    Animated.spring(cancelButtonScaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+      tension: 300,
+      friction: 10,
+    }).start();
+  };
+
+  const handleCancelPressOut = () => {
+    Animated.spring(cancelButtonScaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 300,
+      friction: 10,
+    }).start();
+  };
+
+  if (!visible) return null;
+
+  return (
+    <Modal
+      transparent
+      visible={visible}
+      animationType="none"
+      onRequestClose={onClose}
+    >
+      <Pressable
+        style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+        onPress={onClose}
+      >
+        <Animated.View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            opacity: fadeAnim,
+          }}
+        >
+          <Pressable onPress={(e) => e.stopPropagation()}>
+            <Animated.View
+              style={{
+                backgroundColor: 'white',
+                borderRadius: 24,
+                width: Dimensions.get('window').width - 48,
+                maxWidth: 400,
+                transform: [{ scale: scaleAnim }],
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.15,
+                shadowRadius: 16,
+                elevation: 8,
+              }}
+            >
+              <View className="px-6 pt-6 pb-6">
+                {/* Иконка */}
+                <View className="items-center mb-4">
+                  <View className="w-16 h-16 rounded-full bg-red-50 items-center justify-center">
+                    <Svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                      <Path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <Path d="M16 17l5-5-5-5" />
+                      <Path d="M21 12H9" />
+                    </Svg>
+                  </View>
+                </View>
+
+                {/* Заголовок */}
+                <Text className="text-xl font-bold text-neutral-900 text-center mb-2">
+                  Выйти из аккаунта?
+                </Text>
+
+                {/* Описание */}
+                <Text className="text-base text-neutral-600 text-center mb-6">
+                  Вы уверены, что хотите выйти? Вам потребуется войти снова для доступа к аккаунту.
+                </Text>
+
+                {/* Кнопки */}
+                <View className="flex-row gap-3">
+                  <View className="flex-1">
+                    <Animated.View style={{ transform: [{ scale: cancelButtonScaleAnim }] }}>
+                      <Pressable
+                        onPress={onClose}
+                        onPressIn={handleCancelPressIn}
+                        onPressOut={handleCancelPressOut}
+                        className="bg-neutral-100 rounded-xl py-3.5 px-4"
+                      >
+                        <Text className="text-base font-semibold text-center text-neutral-700">
+                          Отмена
+                        </Text>
+                      </Pressable>
+                    </Animated.View>
+                  </View>
+                  <View className="flex-1">
+                    <Animated.View style={{ transform: [{ scale: buttonScaleAnim }] }}>
+                      <Pressable
+                        onPress={onConfirm}
+                        onPressIn={handleConfirmPressIn}
+                        onPressOut={handleConfirmPressOut}
+                        className="bg-red-500 rounded-xl py-3.5 px-4"
+                        style={{
+                          shadowColor: '#dc2626',
+                          shadowOffset: { width: 0, height: 4 },
+                          shadowOpacity: 0.3,
+                          shadowRadius: 8,
+                          elevation: 4,
+                        }}
+                      >
+                        <Text className="text-base font-semibold text-center text-white">
+                          Выйти
+                        </Text>
+                      </Pressable>
+                    </Animated.View>
+                  </View>
+                </View>
+              </View>
+            </Animated.View>
+          </Pressable>
+        </Animated.View>
+      </Pressable>
+    </Modal>
   );
 }
 
