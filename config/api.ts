@@ -54,7 +54,6 @@ export const API_ENDPOINTS = {
   },
 };
 
-// Вывод в консоль для отладки
 console.log('🌐 API Configuration:');
 console.log(`   Mode: ${MODE}`);
 console.log(`   Platform: ${Platform.OS}`);
