@@ -9,93 +9,134 @@ import { View, Animated } from 'react-native';
 import { useState, useRef } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ToastProvider } from './hooks/useToast';
+import { useAuthSession } from './hooks/useAuthSession';
+import { useCart } from './hooks/useCart';
 
 import './global.css';
 import { StatusBar } from 'expo-status-bar';
 
-type CartItem = {
-  id: number;
-  name: string;
-  compound: string;
-  price: number;
-  rating: number;
-  image: string;
-  quantity: number;
-};
-
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userEmail, setUserEmail] = useState('');
-  const [userName, setUserName] = useState('');
+  const {
+    isAuthenticated,
+    isAuthReady,
+    userEmail,
+    userName,
+    login,
+    logout,
+  } = useAuthSession();
+
+  const {
+    cartItems,
+    setCartItems,
+    selectedItem,
+    setSelectedItem,
+    isBasketOpen,
+    openBasket,
+    closeBasket,
+    addToCart,
+    clearCart,
+    cartItemsCount,
+  } = useCart();
+
   const [activeScreen, setActiveScreen] = useState('main');
-  const [isBasketOpen, setIsBasketOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any>(null);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
+  const [openAddressForm, setOpenAddressForm] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
   const handleLogin = (email: string, name: string) => {
-    setUserEmail(email);
-    setUserName(name);
-    setIsAuthenticated(true);
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setUserEmail('');
-    setUserName('');
-    setCartItems([]);
+    login(email, name);
     setActiveScreen('main');
   };
 
-  const addToCart = (item: any, quantity: number) => {
-    setCartItems(prev => {
-      const existingItem = prev.find(i => i.id === item.id);
-      if (existingItem) {
-        return prev.map(i =>
-          i.id === item.id ? { ...i, quantity: i.quantity + quantity } : i
-        );
-      }
-      return [...prev, { ...item, quantity }];
-    });
-    setSelectedItem(null);
+  const handleLogout = () => {
+    logout();
+    clearCart();
+    setActiveScreen('main');
   };
 
   const handleNavigate = (screen: string) => {
     if (screen === 'basket') {
-      setIsBasketOpen(true);
+      openBasket();
       return;
     }
 
     if (screen === activeScreen) return;
 
-    Animated.sequence([
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }),
+    // Сбрасываем категорию при переходе на menu через Footer
+    if (screen === 'menu') {
+      setSelectedCategory(undefined);
+    }
+
+    setActiveScreen(screen);
+    fadeAnim.setValue(0);
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 150,
+      duration: 180,
         useNativeDriver: true,
-      }),
-    ]).start();
+    }).start();
+  };
 
-    setTimeout(() => setActiveScreen(screen), 150);
+  const handleCategoryPress = (categoryName: string) => {
+    setSelectedCategory(categoryName === 'Все' ? undefined : categoryName);
+    setActiveScreen('menu');
+    fadeAnim.setValue(0);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleNavigateToAddress = () => {
+    // Закрываем корзину перед переходом
+    closeBasket();
+    setActiveScreen('profile');
+    setOpenAddressForm(true);
+    fadeAnim.setValue(0);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleAddressFormOpened = () => {
+    setOpenAddressForm(false);
   };
 
   const renderScreen = () => {
     switch (activeScreen) {
       case 'main':
-        return <Main onItemPress={setSelectedItem} />;
+        return <Main onItemPress={setSelectedItem} onCategoryPress={handleCategoryPress} onNavigateToAddress={handleNavigateToAddress} />;
       case 'menu':
-        return <Menu />;
+        return <Menu onItemPress={setSelectedItem} onAddToCart={addToCart} initialCategory={selectedCategory} />;
       case 'profile':
-        return <Profile userName={userName} userEmail={userEmail} onLogout={handleLogout} />;
+        return (
+          <Profile 
+            userName={userName} 
+            userEmail={userEmail} 
+            onLogout={handleLogout}
+            openAddressForm={openAddressForm}
+            onAddressFormOpened={handleAddressFormOpened}
+          />
+        );
       default:
-        return <Main onItemPress={setSelectedItem} />;
+        return <Main onItemPress={setSelectedItem} onCategoryPress={handleCategoryPress} />;
     }
   };
+
+  // Пока не знаем, есть ли сохранённая сессия — показываем просто белый экран
+  if (!isAuthReady) {
+    return (
+      <SafeAreaProvider>
+        <ToastProvider>
+          <View className="bg-white flex-1">
+            <StatusBar style="auto" />
+          </View>
+        </ToastProvider>
+      </SafeAreaProvider>
+    );
+  }
 
   // Если пользователь не аутентифицирован, показываем экран входа
   if (!isAuthenticated) {
@@ -123,14 +164,15 @@ export default function App() {
             activeScreen={activeScreen} 
             onNavigate={handleNavigate}
             isBasketOpen={isBasketOpen}
-            cartItemsCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+            cartItemsCount={cartItemsCount}
           />
 
           {isBasketOpen && (
             <Basket 
-              onClose={() => setIsBasketOpen(false)} 
+              onClose={closeBasket}
               cartItems={cartItems}
               setCartItems={setCartItems}
+              onNavigateToAddress={handleNavigateToAddress}
             />
           )}
 

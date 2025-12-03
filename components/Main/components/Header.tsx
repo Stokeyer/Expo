@@ -1,6 +1,7 @@
-import { View, Text, Pressable, Alert, Animated } from 'react-native';
+import { View, Text, Pressable, Animated } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 import Svg, { Path, Circle } from 'react-native-svg';
+import { useAddress } from '../../../hooks/useAddress';
 
 function AnimatedAddressButton({ onPress, address }: { onPress: () => void; address: string }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -50,10 +51,26 @@ function AnimatedAddressButton({ onPress, address }: { onPress: () => void; addr
   );
 }
 
-export function Header() {
-  const [address] = useState('ул. Пушкина, 26');
+type HeaderProps = {
+  onNavigateToAddress?: () => void;
+};
+
+export function Header({ onNavigateToAddress }: HeaderProps) {
+  const { addresses, getDefaultAddress, formatAddress, isAddressReady } = useAddress();
+  const [addressText, setAddressText] = useState('Загрузка адреса...');
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const translateAnim = useRef(new Animated.Value(16)).current;
+
+  useEffect(() => {
+    if (isAddressReady) {
+      const defaultAddress = getDefaultAddress();
+      if (defaultAddress) {
+        setAddressText(formatAddress(defaultAddress));
+      } else {
+        setAddressText('Адрес не указан');
+      }
+    }
+  }, [isAddressReady, addresses, getDefaultAddress, formatAddress]);
 
   useEffect(() => {
     Animated.parallel([
@@ -94,10 +111,12 @@ export function Header() {
         </Svg>
 
         <AnimatedAddressButton
-          onPress={() =>
-            Alert.alert('Тут должен быть переход на форму заполнения улицы')
-          }
-          address={address}
+          onPress={() => {
+            if (onNavigateToAddress) {
+              onNavigateToAddress();
+            }
+          }}
+          address={addressText}
         />
       </View>
 

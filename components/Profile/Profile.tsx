@@ -1,8 +1,12 @@
 import { View, Text, Pressable, ScrollView, Animated, Alert } from 'react-native';
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from '../../hooks/useToast';
+import { AddressSettings } from './Settings/AddressSettings';
+import { PaymentSettings } from './Settings/PaymentSettings';
+import { NotificationSettings } from './Settings/NotificationSettings';
+import { AppSettings } from './Settings/AppSettings';
 
 type SettingItem = {
   id: string;
@@ -99,15 +103,49 @@ type ProfileProps = {
   userName: string;
   userEmail: string;
   onLogout: () => void;
+  openAddressForm?: boolean;
+  onAddressFormOpened?: () => void;
 };
 
-export function Profile({ userName, userEmail, onLogout }: ProfileProps) {
+export function Profile({ userName, userEmail, onLogout, openAddressForm, onAddressFormOpened }: ProfileProps) {
   const insets = useSafeAreaInsets();
   const toast = useToast();
+  const [activeSetting, setActiveSetting] = useState<string | null>(null);
+
+  // Автоматически открываем форму адреса, если требуется
+  useEffect(() => {
+    if (openAddressForm) {
+      setActiveSetting('address');
+      if (onAddressFormOpened) {
+        // Небольшая задержка, чтобы форма успела открыться
+        setTimeout(() => {
+          onAddressFormOpened();
+        }, 100);
+      }
+    }
+  }, [openAddressForm]);
 
   const handleSettingPress = (settingId: string, title: string) => {
-    toast.info(`${title} - раздел в разработке`);
+    setActiveSetting(settingId);
   };
+
+  const handleBack = () => {
+    setActiveSetting(null);
+  };
+
+  // Рендерим выбранный экран настроек
+  if (activeSetting === 'address') {
+    return <AddressSettings onBack={handleBack} autoOpenForm={openAddressForm} />;
+  }
+  if (activeSetting === 'payment') {
+    return <PaymentSettings onBack={handleBack} />;
+  }
+  if (activeSetting === 'notifications') {
+    return <NotificationSettings onBack={handleBack} />;
+  }
+  if (activeSetting === 'app-settings') {
+    return <AppSettings onBack={handleBack} />;
+  }
 
   const handleLogout = () => {
     Alert.alert(

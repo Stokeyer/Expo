@@ -1,6 +1,7 @@
 import { View, Text, Image, Pressable, ScrollView, Animated, Dimensions, Easing } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import Svg, { Path } from 'react-native-svg';
+import { useToast } from '../../hooks/useToast';
 
 type CardsProps = {
   onClose: () => void;
@@ -10,13 +11,14 @@ type CardsProps = {
     name: string;
     compound: string;
     price: number;
-    rating: number;
     image: string;
+    category?: string;
   };
 };
 
 export function Cards({ onClose, item, onAddToCart }: CardsProps) {
   const [quantity, setQuantity] = useState(1);
+  const toast = useToast();
   const slideAnim = useRef(new Animated.Value(Dimensions.get('window').height)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   
@@ -153,30 +155,14 @@ export function Cards({ onClose, item, onAddToCart }: CardsProps) {
               </Pressable>
             </Animated.View>
 
-            {/* Rating Badge */}
-            <Animated.View style={{ opacity: badgesOpacity }} className="absolute bottom-4 left-4">
-              <View
-                className="flex-row items-center gap-1 bg-white rounded-full px-3 py-1.5"
-                style={{
-                  shadowColor: '#000',
-                  shadowOpacity: 0.1,
-                  shadowRadius: 8,
-                  shadowOffset: { width: 0, height: 2 },
-                  elevation: 3,
-                }}>
-                <Svg width={16} height={16} viewBox="0 0 24 24" fill="#dc2626">
-                  <Path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" />
-                </Svg>
-                <Text className="text-sm font-semibold text-neutral-900">{item.rating}</Text>
-              </View>
-            </Animated.View>
-
             {/* Category Badge */}
-            <Animated.View style={{ opacity: badgesOpacity }} className="absolute bottom-4 right-4">
-              <View className="bg-white rounded-full px-4 py-1.5">
-                <Text className="text-sm font-medium text-neutral-700">Роллы</Text>
-              </View>
-            </Animated.View>
+            {item.category && (
+              <Animated.View style={{ opacity: badgesOpacity }} className="absolute bottom-4 right-4">
+                <View className="bg-white rounded-full px-4 py-1.5">
+                  <Text className="text-sm font-medium text-neutral-700">{item.category}</Text>
+                </View>
+              </Animated.View>
+            )}
           </View>
 
           {/* Content */}
@@ -258,7 +244,12 @@ export function Cards({ onClose, item, onAddToCart }: CardsProps) {
             <Text className="text-2xl font-bold text-red-500">{item.price * quantity} ₽</Text>
             <Pressable 
               className="flex-1 ml-4 bg-red-500 rounded-2xl py-4 items-center"
-              onPress={() => onAddToCart(item, quantity)}>
+              onPress={() => {
+                if (onAddToCart) {
+                  onAddToCart(item, quantity);
+                  toast.success(`Добавлено в корзину: ${item.name} x${quantity}`);
+                }
+              }}>
               <Text className="text-base font-semibold text-white">Добавить в корзину</Text>
             </Pressable>
           </View>

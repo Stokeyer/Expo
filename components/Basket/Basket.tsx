@@ -1,7 +1,9 @@
 import { View, Text, Pressable, Animated, Dimensions, PanResponder, Image, ScrollView } from 'react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback, memo } from 'react';
 import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Checkout } from './Checkout';
+import { useToast } from '../../hooks/useToast';
 
 function AnimatedButton({ 
   onPress, 
@@ -46,7 +48,7 @@ function AnimatedButton({
   );
 }
 
-function BasketItem({ 
+const BasketItem = memo(function BasketItem({ 
   item, 
   onDecrease, 
   onIncrease,
@@ -113,14 +115,13 @@ function BasketItem({
       </View>
     </Animated.View>
   );
-}
+});
 
 type CartItem = {
   id: number;
   name: string;
   compound: string;
   price: number;
-  rating: number;
   image: string;
   quantity: number;
 };
@@ -129,13 +130,41 @@ type BasketProps = {
   onClose: () => void;
   cartItems: CartItem[];
   setCartItems: (items: CartItem[]) => void;
+  onNavigateToAddress?: () => void;
 };
 
-export function Basket({ onClose, cartItems, setCartItems }: BasketProps) {
+export function Basket({ onClose, cartItems, setCartItems, onNavigateToAddress }: BasketProps) {
   const slideAnim = useRef(new Animated.Value(Dimensions.get('window').height)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const panY = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const toast = useToast();
+
+  const totalPrice = useMemo(() => {
+    return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  }, [cartItems]);
+
+  const handleDecrease = useCallback((itemId: number) => {
+    setCartItems((prev) => {
+      const item = prev.find(i => i.id === itemId);
+      if (!item) return prev;
+      if (item.quantity === 1) {
+        return prev.filter(i => i.id !== itemId);
+      }
+      return prev.map(i =>
+        i.id === itemId ? { ...i, quantity: i.quantity - 1 } : i
+      );
+    });
+  }, [setCartItems]);
+
+  const handleIncrease = useCallback((itemId: number) => {
+    setCartItems((prev) => {
+      return prev.map(i =>
+        i.id === itemId ? { ...i, quantity: i.quantity + 1 } : i
+      );
+    });
+  }, [setCartItems]);
 
   useEffect(() => {
     Animated.parallel([
@@ -243,20 +272,8 @@ export function Basket({ onClose, cartItems, setCartItems }: BasketProps) {
                     key={item.id}
                     item={item}
                     index={index}
-                    onDecrease={() => {
-                      if (item.quantity === 1) {
-                        setCartItems(cartItems.filter(i => i.id !== item.id));
-                      } else {
-                        setCartItems(cartItems.map(i =>
-                          i.id === item.id ? { ...i, quantity: i.quantity - 1 } : i
-                        ));
-                      }
-                    }}
-                    onIncrease={() => {
-                      setCartItems(cartItems.map(i =>
-                        i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
-                      ));
-                    }}
+                    onDecrease={() => handleDecrease(item.id)}
+                    onIncrease={() => handleIncrease(item.id)}
                   />
                 ))}
               </ScrollView>
@@ -268,10 +285,13 @@ export function Basket({ onClose, cartItems, setCartItems }: BasketProps) {
                 <View className="flex-row items-center justify-between mb-4">
                   <Text className="text-base text-neutral-500">Итого</Text>
                   <Text className="text-2xl font-bold text-red-500">
-                    {cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)} ₽
+                    {totalPrice} ₽
                   </Text>
                 </View>
-                <AnimatedButton className="bg-red-500 rounded-2xl py-4 items-center" onPress={() => {}}>
+                <AnimatedButton 
+                  className="bg-red-500 rounded-2xl py-4 items-center" 
+                  onPress={() => setIsCheckoutOpen(true)}
+                >
                   <Text className="text-base font-semibold text-white">Оформить заказ</Text>
                 </AnimatedButton>
               </View>
@@ -279,6 +299,20 @@ export function Basket({ onClose, cartItems, setCartItems }: BasketProps) {
           )}
         </View>
       </Animated.View>
+
+      <Checkout
+        visible={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        cartItems={cartItems}
+        totalPrice={totalPrice}
+        onConfirm={() => {
+          // Здесь можно добавить логику отправки заказа
+          setCartItems([]);
+          toast.success('Заказ успешно оформлен!');
+          handleClose();
+        }}
+        onNavigateToAddress={onNavigateToAddress}
+      />
     </>
   );
 }

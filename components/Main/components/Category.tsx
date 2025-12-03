@@ -1,4 +1,4 @@
-import { View, Text, Pressable, Alert, Animated } from 'react-native';
+import { View, Text, Pressable, Animated } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useEffect, useRef } from 'react';
 
@@ -62,16 +62,22 @@ function CategoryCard({
   );
 }
 
+// Категории с наименьшим количеством букв (2 ряда по 3 колонки)
+// Сеты (4), Роллы (5), Пицца (5), Салаты (6), Фастфуд (7), Суши-нигири (11)
 const categories = [
-  { id: 'sushi', label: 'Суши', icon: '🍣' },
+  { id: 'sets', label: 'Сеты', icon: '🍱' },
   { id: 'rolls', label: 'Роллы', icon: '🍱' },
-  { id: 'ramen', label: 'Рамен', icon: '🍜' },
-  { id: 'sashimi', label: 'Сашими', icon: '🐟' },
-  { id: 'tempura', label: 'Темпура', icon: '🍤' },
-  { id: 'dessert', label: 'Десерты', icon: '🍡' },
+  { id: 'pizza', label: 'Пицца', icon: '🍕' },
+  { id: 'salads', label: 'Салаты', icon: '🥗' },
+  { id: 'fastfood', label: 'Фастфуд', icon: '🍔' },
+  { id: 'sushi-nigiri', label: 'Суши-нигири', icon: '🍣' },
 ];
 
-export function Category() {
+type CategoryProps = {
+  onCategoryPress?: (categoryName: string) => void;
+};
+
+export function Category({ onCategoryPress }: CategoryProps) {
   const animValues = useRef(
     categories.map(() => ({
       opacity: new Animated.Value(0),
@@ -99,13 +105,25 @@ export function Category() {
     Animated.stagger(50, animations).start();
   }, [animValues]);
 
+  const handleCategoryPress = (categoryLabel: string) => {
+    if (onCategoryPress) {
+      onCategoryPress(categoryLabel);
+    }
+  };
+
+  const handleAllPress = () => {
+    if (onCategoryPress) {
+      onCategoryPress('Все');
+    }
+  };
+
   return (
     <View className="mt-6 w-[92%] self-center bg-white">
       <View className="flex-row items-center justify-between">
         <Text className="text-2xl font-semibold text-neutral-900">Категории</Text>
         <Pressable
           className="flex-row items-center gap-1"
-          onPress={() => Alert.alert('Переход в меню')}>
+          onPress={handleAllPress}>
           <Text className="text-base font-medium text-red-500">Все</Text>
           <Svg
             width={16}
@@ -125,7 +143,7 @@ export function Category() {
           <CategoryCard
             key={category.id}
             category={category}
-            onPress={() => Alert.alert(category.label)}
+            onPress={() => handleCategoryPress(category.label)}
             animValues={animValues[index]}
           />
         ))}

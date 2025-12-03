@@ -1,19 +1,18 @@
 import { Platform } from 'react-native';
 
-// Конфигурация API URL
 const API_CONFIG = {
   // Для разработки на эмуляторе
   development: {
-    android: 'http://10.0.2.2:3000',
-    ios: 'http://localhost:3000',
-    web: 'http://localhost:3000',
+    android: 'http://146.103.118.246:3000',
+    ios: 'http://146.103.118.246:3000',
+    web: 'http://146.103.118.246:3000',
   },
   
   // Для разработки на физическом устройстве
   physical: {
-    android: 'http://192.168.100.2:3000',
-    ios: 'http://192.168.100.2:3000',
-    web: 'http://localhost:3000',
+    android: 'http://146.103.118.246:3000',
+    ios: 'http://146.103.118.246:3000',
+    web: 'http://146.103.118.246:3000',
   },
   
   // Для production
@@ -52,6 +51,12 @@ export const API_ENDPOINTS = {
     register: `${API_URL}/api/auth/register`,
     login: `${API_URL}/api/auth/login`,
     profile: `${API_URL}/api/auth/profile`,
+  },
+  items: {
+    getAll: `${API_URL}/api/items`,
+    getByCategory: (category: string) => `${API_URL}/api/items?category=${category}`,
+    getCategories: `${API_URL}/api/items/categories`,
+    getById: (id: number) => `${API_URL}/api/items/${id}`,
   },
 };
 

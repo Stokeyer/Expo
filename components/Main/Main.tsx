@@ -5,18 +5,20 @@ import { View, ScrollView } from 'react-native';
 
 type MainProps = {
   onItemPress?: (item: any) => void;
+  onCategoryPress?: (categoryName: string) => void;
+  onNavigateToAddress?: () => void;
 };
 
-export function Main({ onItemPress }: MainProps) {
+export function Main({ onItemPress, onCategoryPress, onNavigateToAddress }: MainProps) {
   return (
     <View className="flex-1 bg-white">
       <ScrollView
         className="flex-1"
         contentContainerClassName="w-full items-center bg-white"
         contentContainerStyle={{ paddingBottom: 70 }}>
-        <Header />
-        <Category/>
-        <Popular onItemPress={onItemPress} />
+        <Header onNavigateToAddress={onNavigateToAddress} />
+        <Category onCategoryPress={onCategoryPress} />
+        <Popular onItemPress={onItemPress} onCategoryPress={onCategoryPress} />
       </ScrollView>
     </View>
   );
