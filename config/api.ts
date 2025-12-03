@@ -15,18 +15,12 @@ const API_CONFIG = {
     web: 'http://146.103.118.246:3000',
   },
   
-  // Для production
   production: {
-    android: 'https://api.rollshousepizza.com',
-    ios: 'https://api.rollshousepizza.com',
-    web: 'https://api.rollshousepizza.com',
+    android: 'http://146.103.118.246:3000',
+    ios: 'http://146.103.118.246:3000',
+    web: 'http://146.103.118.246:3000',
   },
 };
-
-// Выберите режим: 'development' | 'physical' | 'production'
-// 'development' - для Android эмулятора (10.0.2.2)
-// 'physical' - для физического устройства (192.168.100.2)
-// 'production' - для продакшена
 const MODE: 'development' | 'physical' | 'production' = 'physical';
 
 // Получить URL для текущей платформы
