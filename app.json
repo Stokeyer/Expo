@@ -10,7 +10,7 @@
       "tsconfigPaths": true
     },
     "cli": {
-      "appVersionSource": "app.json"
+      "appVersionSource": "remote"
     },
     "plugins": [],
     "orientation": "portrait",
