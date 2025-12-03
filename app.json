@@ -9,9 +9,6 @@
     "experiments": {
       "tsconfigPaths": true
     },
-    "cli": {
-      "appVersionSource": "remote"
-    },
     "plugins": [],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
