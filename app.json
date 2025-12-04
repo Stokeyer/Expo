@@ -35,7 +35,8 @@
       },
       "package": "com.rollshouse.pizza",
       "versionCode": 1,
-      "permissions": []
+      "permissions": [],
+      "usesCleartextTraffic": true
     },
     "extra": {
       "eas": {

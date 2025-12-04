@@ -21,7 +21,26 @@ const API_CONFIG = {
     web: 'http://146.103.118.246:3000',
   },
 };
-const MODE: 'development' | 'physical' | 'production' = 'physical';
+// Определяем режим на основе окружения
+// __DEV__ - true в development режиме Expo
+// process.env.EXPO_PUBLIC_ENV - можно задать через переменные окружения
+const getMode = (): 'development' | 'physical' | 'production' => {
+  // Если задана переменная окружения, используем её
+  if (process.env.EXPO_PUBLIC_ENV === 'production') {
+    return 'production';
+  }
+  if (process.env.EXPO_PUBLIC_ENV === 'physical') {
+    return 'physical';
+  }
+  // В production билде __DEV__ будет false
+  if (__DEV__) {
+    return 'development';
+  }
+  // По умолчанию для production билдов
+  return 'production';
+};
+
+const MODE = getMode();
 
 // Получить URL для текущей платформы
 export const getApiUrl = (): string => {
