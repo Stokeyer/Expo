@@ -1,6 +1,7 @@
 import { View, Text, Image, Pressable, ScrollView, Animated, Dimensions, Easing } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import Svg, { Path } from 'react-native-svg';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from '../../hooks/useToast';
 
 type CardsProps = {
@@ -19,6 +20,7 @@ type CardsProps = {
 export function Cards({ onClose, item, onAddToCart }: CardsProps) {
   const [quantity, setQuantity] = useState(1);
   const toast = useToast();
+  const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(Dimensions.get('window').height)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   
@@ -127,7 +129,9 @@ export function Cards({ onClose, item, onAddToCart }: CardsProps) {
       <Animated.View
         className="absolute inset-0 bg-white"
         style={{ transform: [{ translateY: slideAnim }] }}>
-        <ScrollView className="flex-1">
+        <ScrollView 
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: 140 + Math.max(insets.bottom, 16) }}>
           <View className="relative">
             <Animated.View style={{ opacity: imageOpacity }}>
               <Image
@@ -215,6 +219,7 @@ export function Cards({ onClose, item, onAddToCart }: CardsProps) {
           className="px-6 py-4 bg-white border-t border-neutral-200"
           style={{
             transform: [{ translateY: bottomBarSlide }],
+            paddingBottom: Math.max(insets.bottom, 16),
             shadowColor: '#000',
             shadowOpacity: 0.05,
             shadowRadius: 10,
