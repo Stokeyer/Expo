@@ -4,7 +4,7 @@ const API_CONFIG = {
   // Для разработки на эмуляторе
   development: {
     android: 'http://10.0.2.2:3000', // 10.0.2.2 - специальный адрес для доступа к localhost хоста из Android эмулятора
-    ios: 'http://localhost:3000', // localhost работает в iOS симуляторе
+    ios: 'http://146.103.118.246:3000', // localhost работает в iOS симуляторе
     web: 'http://localhost:3000', // localhost для веб-браузера
   },
   

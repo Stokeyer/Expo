@@ -128,11 +128,9 @@ export function Menu({ onItemPress, onAddToCart, initialCategory }: MenuProps = 
   const filteredItems = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return items;
+    // Поиск работает ТОЛЬКО по названию блюда (title)
     return items.filter((item) => {
-      return (
-        item.title.toLowerCase().includes(q) ||
-        item.description.toLowerCase().includes(q)
-      );
+      return item.title.toLowerCase().includes(q);
     });
   }, [items, searchQuery]);
 
