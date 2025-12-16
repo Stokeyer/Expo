@@ -4,6 +4,7 @@ import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAddress } from '../../hooks/useAddress';
 import { useToast } from '../../hooks/useToast';
+import { API_ENDPOINTS } from '../../config/api';
 
 type CartItem = {
   id: number;
@@ -83,6 +84,7 @@ export function Checkout({ visible, onClose, cartItems, totalPrice, onConfirm, o
   const [comment, setComment] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState<string>('Загрузка адреса...');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -168,7 +170,7 @@ export function Checkout({ visible, onClose, cartItems, totalPrice, onConfirm, o
     return cleaned.length === 11 && cleaned.startsWith('7');
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     // Проверяем наличие адреса
     const defaultAddress = getDefaultAddress();
     if (!defaultAddress || addresses.length === 0) {
@@ -195,9 +197,58 @@ export function Checkout({ visible, onClose, cartItems, totalPrice, onConfirm, o
       return;
     }
 
-    // Здесь можно добавить логику отправки заказа
-    onConfirm();
-    handleClose();
+    // Блокируем повторную отправку
+    if (isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Формируем данные заказа
+      const orderData = {
+        phone: phone,
+        address: formatAddress(defaultAddress),
+        items: cartItems.map(item => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        totalPrice: totalPrice,
+        ...(comment.trim() && { comment: comment.trim() }),
+      };
+
+      console.log('📦 Отправка заказа:', orderData);
+      console.log('🌐 URL:', API_ENDPOINTS.orders.create);
+
+      // Отправляем заказ на бэкенд
+      const response = await fetch(API_ENDPOINTS.orders.create, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Ошибка сервера' }));
+        throw new Error(errorData.message || `Ошибка ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Заказ успешно отправлен:', result);
+
+      toast.success('Заказ успешно оформлен!');
+      onConfirm();
+      handleClose();
+    } catch (error: any) {
+      console.error('❌ Ошибка при отправке заказа:', error);
+      const errorMessage = error.message || 'Не удалось отправить заказ. Проверьте подключение к интернету.';
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const panResponder = useRef(
@@ -354,8 +405,11 @@ export function Checkout({ visible, onClose, cartItems, totalPrice, onConfirm, o
             <AnimatedButton 
               className="bg-red-500 rounded-2xl py-4 items-center" 
               onPress={handleConfirm}
+              disabled={isSubmitting}
             >
-              <Text className="text-base font-semibold text-white">Подтвердить заказ</Text>
+              <Text className="text-base font-semibold text-white">
+                {isSubmitting ? 'Отправка...' : 'Подтвердить заказ'}
+              </Text>
             </AnimatedButton>
           </View>
         </View>
