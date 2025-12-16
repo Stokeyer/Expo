@@ -3,9 +3,9 @@ import { Platform } from 'react-native';
 const API_CONFIG = {
   // Для разработки на эмуляторе
   development: {
-    android: 'http://10.0.2.2:3000', // 10.0.2.2 - специальный адрес для Android эмулятора
-    ios: 'http://localhost:3000', // localhost работает в iOS симуляторе
-    web: 'http://localhost:3000', // localhost для веб-браузера
+    android: 'http://146.103.118.246:3000', // 10.0.2.2 - специальный адрес для Android эмулятора
+    ios: 'http://146.103.118.246:3000', // localhost работает в iOS симуляторе
+    web: 'http://146.103.118.246:3000', // localhost для веб-браузера
   },
   
   // Для разработки на физическом устройстве
@@ -20,9 +20,9 @@ const API_CONFIG = {
   },
   
   production: {
-    android: 'http://localhost:3000',
-    ios: 'http://localhost:3000',
-    web: 'http://localhost:3000',
+    android: 'http://146.103.118.246:3000',
+    ios: 'http://146.103.118.246:3000',
+    web: 'http://146.103.118.246:3000',
   },
 };
 // Определяем режим на основе окружения
